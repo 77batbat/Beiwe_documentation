@@ -77,3 +77,5 @@ The following steps instruct how to install necessary packages including **Rcpp*
 
         ```
 
+## Introduction to the functions involved in Beiwe-Analysis
+### Preprocessing
