@@ -17,7 +17,7 @@ Some of the Beiwe-Analysis code references **`Python`** or **`C`**-related code 
 The following steps instruct how to install necessary packages including **Rcpp** that facilitate interfacing **`C`** code in R Packages. 
 
 - **Rcpp requires gcc and gfortran installed**
-    - **For macOS users**:
+	**For macOS users**:
     	
 		Open the terminal console, and check if you already installed Xcode Command Line Tools by typing:        	
 	
@@ -44,8 +44,8 @@ The following steps instruct how to install necessary packages including **Rcpp*
      	```
      	
 		The next step is to install **`gfortran`**. Follow the steps in [How to install gfortran on Mac OS X](http://skipperkongen.dk/2012/04/27/how-to-install-gfortran-on-mac-os-x/).
-    
-    - **For windows users**, ...
+
+	**For windows users**, ...
 
 - **Install/Load Required R Packages and Set Directories in Rstudio**
 
