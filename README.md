@@ -34,7 +34,7 @@ The following steps instruct how to install necessary packages including **Rcpp*
 		```
 		$gcc --version
 		```
-	- The next step is to install **`gfortran`**. Follow the steps in [How to install gfortran on Mac OS X](http://skipperkongen.dk/2012/04/27/how-to-install-gfortran-on-mac-os-x/).
+		- The next step is to install **`gfortran`**. Follow the steps in [How to install gfortran on Mac OS X](http://skipperkongen.dk/2012/04/27/how-to-install-gfortran-on-mac-os-x/).
     - **For windows users**, ...
 
 - **Install/Load Required R Packages and Set Directories in Rstudio**
