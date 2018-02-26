@@ -3,7 +3,7 @@
 This documentation will demonstrate a guideline of how to run the Beiwe-Analysis code locally and will also provide introduction for each function.
 
 ## Table of Contents
-- Language and Environment Setup
+- Language, Packages, and Environment Setup
 - Introduction to the functions involved in Beiwe-Analysis
     - Preprocessing
     - Processing
@@ -69,6 +69,14 @@ The following steps instruct how to install necessary packages including **Rcpp*
         detach("package:plyr", unload=TRUE)
 
         ```
+    - Set filepaths for code source, patient data and analysis output in Rstudio. Below is an example to set these filepaths:
+    	
+	```
+	source_filepath    = "/Users/OnnelaLab/Beiwe-Analysis"
+	data_filepath      = "/Users/OnnelaLab/Sample-Data"
+	output_filepath    = "/Users/OnnelaLab/output"
+	root_filepath      = "/Users/OnnelaLab/"
+	```
 
 ## Introduction to the functions involved in Beiwe-Analysis
 ### Preprocessing
