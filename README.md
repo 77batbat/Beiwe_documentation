@@ -38,6 +38,7 @@ The following steps instruct how to install necessary packages including **Rcpp*
         
 	The following can be used to verify **`gcc`** is installed:                        
      	
+	
 	```
      	$gcc --version
      	```
