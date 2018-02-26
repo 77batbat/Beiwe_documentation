@@ -19,22 +19,26 @@ The following steps instruct how to install necessary packages including **Rcpp*
 - **Rcpp requires gcc and gfortran installed**
     - **For macOS users**:
     Open the terminal console, and check if you already installed Xcode Command Line Tools by typing:    
-    	```
+    	
+	```
      	$ xcode-select -p
     	```
          
      If you see the following returns then the full Xcode package is already installed	
+	
 	```
      	/Applications/Xcode.app/Contents/Developer
      	```
      
      If not, enter the following to install          
-     	```
+     	
+	```
      	$xcode-select --install
      	```
          
      The following can be used to verify **`gcc`** is installed:                        
-     	```
+     	
+	```
      	$gcc --version
      	```
      
