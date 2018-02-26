@@ -23,9 +23,9 @@ The following steps instruct how to install necessary packages including **Rcpp*
             $ xcode-select -p
             ```
          If you see the following returns then the full Xcode package is already installed
-	    ```
+	     ```
 	      /Applications/Xcode.app/Contents/Developer
-	    ```
+	     ```
 	
     - **For windows users**, ...
 
