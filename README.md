@@ -163,6 +163,8 @@ function(patient_name, minutes, verbose = TRUE, ...){
 
 to call the accelerometer_preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also want to combine information from each file and split the variable "timestamp” into “hours” and “days” and convert them information and store them in the format of accmat and store them in RDS file.
 
+}}
+
 
 ### Processing
 
