@@ -5,10 +5,10 @@ This documentation will demonstrate a guideline of how to run the Beiwe-Analysis
 ## Table of Contents
 - [Environment Setup](#environment-setup) 
 - [Introduction to the functions involved in Beiwe-Analysis](#introduction-to-the-functions-involved-in-beiwe-analysis)
-    - Preprocessing
-    - Processing
-    - Outputs
-    - Utility 
+    - [Preprocessing](#preprocessing)
+    - [Processing](#processing)
+    - [Outputs](#outputs)
+    - [Utility](#utility) 
 
 ## Environment Setup
 
@@ -162,3 +162,10 @@ function(patient_name, minutes, verbose = TRUE, ...){
 ```
 
 to call the accelerometer_preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also want to combine information from each file and split the variable "timestamp” into “hours” and “days” and convert them information and store them in the format of accmat and store them in RDS file.
+
+
+### Processing
+
+### Outputs
+
+### Utility
