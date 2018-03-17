@@ -3,7 +3,7 @@
 This documentation will demonstrate a guideline of how to run the Beiwe-Analysis code locally and will also provide introduction for each function.
 
 ## Table of Contents
-- Language, Packages, and Environment Setup
+- [Language, Packages, and Environment Setup] (#Language-Packages-and-Environmen-Setup)
 - Introduction to the functions involved in Beiwe-Analysis
     - Preprocessing
     - Processing
