@@ -3,14 +3,14 @@
 This documentation will demonstrate a guideline of how to run the Beiwe-Analysis code locally and will also provide introduction for each function.
 
 ## Table of Contents
-- [Language, Packages, and Environment Setup] (#Language-Packages-and-Environmen-Setup)
-- Introduction to the functions involved in Beiwe-Analysis
+- [Environment Setup](#environment-setup) 
+- [Introduction to the functions involved in Beiwe-Analysis](#introduction-to-the-functions-involved-in-beiwe-analysis)
     - Preprocessing
     - Processing
     - Outputs
     - Utility 
 
-## Language, Packages, and Environment Setup
+## Environment Setup
 
 Some of the Beiwe-Analysis code references **`Python`** or **`C`**-related code for speed, but most of this code is in **`R`**, so we suggest running the code in the **`Rstudio`**. If you already have **`Rstudio`** installed, we suggest updating it to the latest version.
 
