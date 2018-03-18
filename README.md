@@ -114,6 +114,7 @@ function(patient_name, ...){
 
 calling the text preprocessing function, we create textmat by adding information from texts file. To be specific, we first convert textmat by dividing it by 1000. Then we created the variable the variables "hours","days" by splitting the variable  "timestamp”. The reason to do this is since timestamp combine the information of hours and days and we want to extract them from this variable. 
 
+
 #### calls_preprocessing
 ```
 function(patient_name, ...){
@@ -166,7 +167,404 @@ to call the accelerometer_preprocessing, we read files from our working director
 }}
 
 
+#### find_bursts
+```
+find_bursts = function(patient_name,
+						stream,
+						millisecond_divider,
+						code_filepath = paste(source_filepath, "/Preprocessing/find_bursts.py",sep=""),
+						verbose = TRUE,
+						...)
+{						  
+...
+  
+  if(file.exists(patient_data_filename_RDS)){
+  if(verbose) cat(paste(stream, "bursts file already exists.\n"))
+  }else{
+    system(paste("python", code_filepath, data_filepath, patient_data_filename_TXT, patient_name, stream, millisecond_divider))
+	data = read.csv2(patient_data_filename_TXT, sep=",", header=T)
+...
+
+```
+
+this function we input the names of patients and the filepath of code to find bursts. If the file already exists, then we report the information as “bursts file already exists”, otherwise we retrieve the information by calling “system” function and combine the filepath from code, data, patient_data_filename_TXT, patient_name, etc. and save it as RDS.
+
+
+
+
+
 ### Processing
+#### Call_features
+
+```
+call_features = function(callmat){
+  # input:  callmat, a processed array of calls
+  # output: call_features, a processed array of calls features
+  day = function(timestamp) strsplit(as.character(as.POSIXct(timestamp,tz="",origin="1970-01-01"))," ")[[1]][1]
+  callmat_f = callmat # callmat for the features
+  callmat_f[,"day"] = sapply(callmat[,"timestamp"], day)
+
+  outgoing_calls = callmat_f %>%
+    group_by(day) %>%
+    filter(call.type == "Outgoing Call") %>%
+    summarise(outgoing_calls = n())
+
+  outgoing_calllengths = callmat_f %>%
+    group_by(day) %>%
+    filter(call.type == "Outgoing Call") %>%
+    summarise(outgoing_calllengths = sum(duration.in.seconds))
+
+  call_outdegree = callmat_f %>%
+    group_by(day) %>%
+    filter(call.type == "Outgoing Call") %>%
+    select(day, hashed.phone.number) %>%
+    distinct(hashed.phone.number) %>%
+    summarise(call_outdegree = n())
+
+...
+omit the corresponding code of incoming calls
+...
+
+  send_receive_changes = function(x) sum(abs(diff(as.integer(x == "Outgoing Call"))))
+  call_reciprocity = callmat_f %>%
+    group_by(day, hashed.phone.number) %>%
+    summarise(changes = send_receive_changes(call.type)) %>%
+    summarize(reciprocity = sum(changes))
+
+  response_time = function(x, y){# specifically, hours until responded to a call
+    where = which((diff(as.integer(x == "Outgoing Call"))) > 0)
+    output = mean(y[where+1]-y[where], na.rm=TRUE)
+    round(output / 60 / 60, 2)
+  }
+  call_responsiveness = callmat_f %>% 
+    group_by(day, hashed.phone.number) %>%
+    summarize(responsiveness = response_time(call.type, timestamp)) %>%
+    summarize(responsiveness = mean(responsiveness, na.rm=TRUE))
+
+  call_feature_list = list(outgoing_calls, outgoing_calllengths, call_outdegree, 
+                           incoming_calls, incoming_calllengths, call_indegree,
+                           call_reciprocity, call_responsiveness)
+
+  call_features = Reduce(full_join, call_feature_list) # reduces each feature to days for which data is available.
+  # call_features[,"outgoing_calls"]/call_features[,"incoming_calls"]
+  call_features = data.frame(call_features)
+  return(call_features)
+}
+```
+
+Call_features is a long function, which is used to retrieve information of features in data.
+Basically, this function input the information of callmat, a processed array of calls, and output (call_features), a processed array of calls features
+To be specific, We have the variable of “day”, which is used for grouping the information by days. Then we collect information of outgoing/incoming calls, the length of outgoing/incoming calls, the degree of outgoing/incoming calls, changes, responsive time, etc., and obtain the information by days in numeric unit. In the end, we combine these information and join them into one data frame.
+
+
+#### Call_locations
+```
+call_locations = function(callmat, mobmat){
+	calllocs = NULL
+	calllocs = callmat[,1] %>%
+		map(GPSlocation, mobility_matrix = mobmat) %>%
+		do.call(rbind, .) %>%
+		as.data.frame() %>%
+		cbind(callmat[,c("duration.in.seconds","call.type")])
+	colnames(calllocs) = c("x","y", "code", "timestamp","length","call.type")
+	calllocs[,c("hours","days")]  = hours(calllocs[,"timestamp"])
+	return(calllocs)
+}
+```
+this function inputs the callmat and mobmat, and then uses the first column of callmat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the calllocs, the matrix contains the information of the call, including the days, hours, type and length.
+
+
+#### CombineSurveyResponses
+```
+combine_survey_responses = function(srvyinds,groupings,labels){
+  featurefile=paste(output_filepath,"/Processed_data","/Group",sep="")
+  filename=paste("feature_matrix_clean_",daysback,"daycarry.rds",sep="")
+  outfilename=paste("feature_matrix_clean_",daysback,"daycarry_combined.rds",sep="")
+  outtxtname=paste("feature_matrix_clean_",daysback,"daycarry_combined.txt",sep="")
+  infilename=paste(featurefile,filename,sep="/")
+  if(!file.exists(infilename)){return(NULL)}
+  dat=readRDS(infilename)[[1]]
+  #dat=read.csv(paste(fileloc,filename,sep="/"),stringsAsFactors=FALSE,header=TRUE,sep="\t")
+  outmat = cbind(dat[,1:2],matrix(NA,ncol=length(groupings),nrow=nrow(dat),dimnames=list(NULL,labels)),dat[,(max(srvyinds)+1):ncol(dat)])
+  for(j in 1:length(groupings)){
+    INDsPICK = groupings[[j]]
+    for(i in 1:nrow(dat)){
+      nAns=length(which(!is.na(dat[i,INDsPICK])))
+      if(nAns>0){
+        outmat[i,2+j]=sum(as.numeric(dat[i,INDsPICK]),na.rm=T)/(nAns)
+      }
+    }
+  }
+  saveRDS(list(outmat),paste(featurefile,outfilename,sep="/"))
+  write.table(outmat,file=paste(featurefile,outtxtname,sep="/"),sep="\t",quote=FALSE,row.names=FALSE)
+}
+```
+the function is used for combing survey response. Based on the response of survey, we remove NA and files which do not exist. By running loops, we conclude the information of average of grouping in each entry. By this aggregation and operation step, we combine the information from survey.
+
+
+#### coverage_over_time
+```
+coverage_over_time = function(stream,
+                              verbose = TRUE,
+                              ...)
+...
+
+if(!file.exists(input_filename)){
+    if(verbose) cat("Bursts file does not exist.\n")
+  }else{
+    bursts   = readRDS(input_filename)
+    n_patients = bursts %>% data.frame %>% dplyr::select(patient) %>% unique %>% unlist %>% length
+    coverage_over_time = bursts %>%
+      group_by(zeroed) %>%
+      summarize(
+        total_coverage_across_all_patients = sum(total_coverage,na.rm=T)/n_patients,
+        total_coverage_across_active_patients = mean(total_coverage,na.rm=T),
+        num_bursts_coverage = mean(num_bursts_coverage,na.rm=T),
+        within_burst_length_coverage    = mean(within_burst_length_coverage,na.rm=T),
+        within_burst_frequency_coverage = mean(within_burst_frequency_coverage,na.rm=T)
+      )
+	  coverage_over_time = coverage_over_time %>% data.frame
+	  coverage_over_time[is.infinite(coverage_over_time[,"within_burst_frequency_coverage"]),"within_burst_frequency_coverage"] = 1
+    saveRDS(coverage_over_time, results_filename)
+  }
+}
+```
+this function is used for calculating the coverage of patients. We first obtain the total number of patience, and then aggregate information of total coverage across all patients, total coverage across all active patients, number of bursts coverage. After this aggregation, we convert them into data frame of coverage over time. If the information in coverage over time is infinite, we define this case as one.
+
+
+#### find_questions
+```
+find_questions = function(...){
+...
+
+    if(file.exists(patient_survey_filename))
+      questions[[patient_name]] = readRDS(patient_survey_filename) %>% dplyr::select(question.text) %>% unlist %>% as.character
+  }
+  questions = do.call(c, questions) %>% unique
+...
+```
+this function is used for find question by calling each patient name and finding the corresponding filename of survey for each patient. 
+
+
+#### get_days
+```
+get_days = function(...){
+	list(...) %>%
+    lapply(function(x) x[,'days']) %>%
+    Reduce(union, .) %>%
+    unique %>%
+	sort %>%
+	setdiff("NA")
+}
+```
+we input any number of dataframe objects with a "days" column and output a vector of all the unique days.
+
+
+#### hours
+```
+hours = function(timestamps
+  days = timestamps %>% unlist %>% as.POSIXlt(origin = "1970-01-01") %>%
+    as.character %>%
+    map(function(x){if(is.na(x)){return(c("NA","NA"))}else{return(strsplit(x, " "))}}) %>%
+    unlist %>%
+    matrix(nrow=2) %>%
+    t
+  days = days[,1]
+  hours = as.POSIXlt(timestamps, origin = "1970-01-01") %>%
+    map(function(timestamp){timestamp %>%
+        unclass() %>%
+        unlist()}) %>%
+    data.frame() %>% 
+    cbind(timestamps) %>%
+    dplyr::select(hour, min, sec) %>%
+    apply(1, function(times) sum(times * c(1, 1/60, 1/3600)))
+  output = as_data_frame(cbind(hours=hours, days=days))
+  output["hours"] = lapply(output["hours"], as.numeric)
+  return(output)
+}
+```
+this function is used for converting timestamps into hour of the day. We first remove the data as “NA” and use as.POSIXlt to extract the information of hour. We convert them into units of minutes and seconds. Finally, this function return the column of “hour”.
+
+
+#### model_data_quality_predictiveness
+```
+model_data_quality_predictiveness = function(questions_filter, SHIFT){
+  patient_names = list.files(data_filepath)[-grep("\\.",list.files(data_filepath))]
+  weekly_coverage = function(stream, shift, ...){
+    data = readRDS(paste(output_filepath, "/Preprocessed_Data/Group/", stream, "_bursts.rds", sep="")) %>% data.frame %>% subset(complete.cases(.))
+    data[,"zeroed_week"] = data[,"zeroed"] %/% 7 + shift
+    return(
+      data %>% group_by(patient, zeroed_week) %>% summarize(
+        #mean_num_bursts_coverage = mean(num_bursts_coverage),
+        #mean_within_burst_length_coverage = mean(within_burst_length_coverage),
+        #mean_within_burst_frequency_coverage = mean(within_burst_frequency_coverage)
+        mean_total_coverage = sum(total_coverage)/7
+      )
+    )
+  }
+  create_zeroed_columns = function(data, shift){
+    data[,"zeroed"] = 0
+    mins = data %>% group_by(patient) %>% summarise(min_date = min(numeric_date))
+    for(pat in patient_names){
+      sub = which(data[,"patient"]==pat)
+      data[sub,"zeroed"] = data[sub,"numeric_date"]-unlist((mins %>% filter(patient == pat))[,"min_date"])
+    }
+    data[,"zeroed_week"] = data[,"zeroed"] %/% 7 + shift
+    return(data)
+  }
+  
+weekly_accelerometer = weekly_coverage("accelerometer", shift = SHIFT)
+  weekly_gps = weekly_coverage("gps", shift = SHIFT)
+  
+  timings = readRDS(paste(output_filepath, "/Processed_Data/Group/survey_timings.rds", sep="")) %>% data.frame %>% subset(complete.cases(.))
+  timings[,"numeric_date"] =as.numeric(as.Date(as.POSIXct(timings[,"Notified"],origin="1970-01-01")))
+  colnames(timings)[which(colnames(timings) == "Person")] = "patient"
+  timings = timings %>% data.frame
+  timings[,"time_to_present"] = log10(timings[,"Present"]-timings[,"Notified"])
+  timings[,"time_to_submitted"] = log10(timings[,"Submitted"]-timings[,"Present"])
+  timings = create_zeroed_columns(timings, shift = SHIFT)
+  timings = timings[complete.cases(timings)&(!is.infinite(timings[,"time_to_present"]))&(!is.infinite(timings[,"time_to_submitted"])),]
+  weekly_timings = timings %>% group_by(patient, zeroed_week) %>% summarize(
+    mean_time_to_present = mean(time_to_present),
+    mean_time_to_submitted = mean(time_to_submitted)
+  ) %>% data.frame
+  
+  surveys = list()
+  for(patient_name in patient_names){
+    patient_survey_filename = paste(output_filepath, "/Preprocessed_Data/Individual/",patient_name, "/survey_data.rds",sep="")
+    if(file.exists(patient_survey_filename))
+      surveys[[patient_name]] = readRDS(patient_survey_filename) %>% dplyr::filter(question.text %in% questions_filter) %>% group_by(survey_id, timestamp) %>% summarize(count=n(), mean_score = mean(as.numeric(answer),na.rm=T), completion = sum(!is.na(as.numeric(answer)))) %>% data.frame %>% mutate(patient = patient_name)
+  }
+  surveys = do.call(rbind, surveys)
+  surveys[,"date"] = as.factor(as.Date(as.POSIXct(surveys[,"timestamp"],origin="1970-01-01")))
+  surveys[,"numeric_date"] = as.numeric(surveys[,"date"])
+  surveys = create_zeroed_columns(surveys, shift = 0)
+  weekly_surveys = surveys %>% group_by(patient, zeroed_week) %>% summarize(mean_score = mean(mean_score), completion = sum(completion))
+  
+  
+  
+  data=Reduce(function(...) merge(..., all = TRUE, by = c("patient", "zeroed_week")), 
+              list(weekly_accelerometer, weekly_gps, weekly_timings, weekly_surveys))
+  #data[which(is.infinite(data[,"mean_within_burst_frequency_coverage.y"])),"mean_within_burst_frequency_coverage.y"] = NA
+  
+  
+  
+  mod = lmer(mean_score~mean_total_coverage.x + mean_total_coverage.y + 
+               mean_time_to_present + mean_time_to_submitted + completion + (1|patient), data=data)
+  return(mod)
+}
+```
+First of all, this function groups the data by patient and aggregate information of coverage. Then creates zeroed column and zeroed week. Secondly, we define the variable of weekly_accelerometer, weekly_gps by calling “weekly_coverage” function. After removing the “NA”, and including time variables such as “time_to_present” and “time_to_submitted”, we have the new data of weekly_timeing. In the end, we convert the date into “hours”, and finalizing our data by combing these information together (weekly_accelerometer, weekly_gps, weekly_timings, etc.)
+
+
+#### powerstate_locations
+```
+powerstate_locations = function(statemat, mobmat){
+	statelocs = NULL
+	statelocs = statemat[,1] %>%
+		map(GPSlocation, mobility_matrix = mobmat) %>%
+		do.call(rbind, .) %>%
+		as.data.frame() %>%
+		cbind(statemat[,c("event")])
+	colnames(statelocs) = c("x","y", "event","timestamp","screen")
+	statelocs[,c("hours","days")] = hours(unlist(statelocs[,"timestamp"]))
+	statemat[,c("hours","days")]  = hours(statemat[,"timestamp"])
+	return(statelocs)
+}
+```
+this function inputs the statemat and mobmat, and then uses the first column of statemat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the statelocs, the matrix contains the information of the call, including the days, hours, type and length.
+
+
+#### ReplicateSurveyResponsesBackwards
+```
+fill_in_NAs = function(...){
+  patient_input_filepath = paste(output_filepath, "/Processed_Data/Group",sep="")
+  patient_input_filename = paste(patient_input_filepath, "/feature_matrix.rds",sep="")
+  patient_output_filename = paste(patient_input_filepath, "/feature_matrix_clean.rds",sep="")
+  if(!file.exists(patient_input_filename)){return(NULL)}
+  dat=data.frame(readRDS(patient_input_filename)[[1]])
+  for(i in 1:nrow(dat)){
+    for(j in 1:ncol(dat)){
+      if(is.na(dat[i,j])){next}
+      if(is.nan(dat[i,j])){dat[i,j]=0}
+      if(dat[i,j]=="NaN"){dat[i,j]="0"}
+      if(dat[i,j]==""){
+        dat[i,j]=NA
+        next
+      }
+      if(dat[i,j]=="NOT_PRESENTED"){
+        dat[i,j]=NA
+      }
+    }
+  }
+  saveRDS(list(dat),patient_output_filename)
+  #write.table(dat,file=paste(fileloc,"/",strsplit(filename,split='\\.')[[1]][1],"CLEAN.txt",sep=""),sep="\t",quote=FALSE,row.names=FALSE)
+}
+
+replicate_survey_responses_backwards = function(surveycols,daysback=1,...){
+  fileloc=paste(output_filepath,"/Processed_Data/Group",sep="")
+  filename="feature_matrix_clean.rds"
+  dat = readRDS(paste(fileloc,filename,sep="/"))[[1]]
+  
+  datenums=round(as.numeric(as.POSIXct(dat[,2]))/(24*3600))
+  for(jj in 1:length(surveycols)){
+    j=surveycols[jj]
+    backvals = rep(NA,daysback)
+    backvalsdates = datenums[nrow(dat):(nrow(dat)-daysback+1)]
+    backvalsinds = dat[nrow(dat):(nrow(dat)-daysback+1),1]
+    curID = dat[nrow(dat),1]
+    for(i in nrow(dat):1){
+      IDNOTNA = which(!is.na(backvals))
+      IDSAMEIND = which(backvalsinds==dat[i,1])
+      IDCLOSE = which(backvalsdates-datenums[i] <=daysback)
+      IDPASS=intersect(intersect(IDNOTNA,IDSAMEIND),IDCLOSE)
+      if(is.na(dat[i,j]) && length(IDPASS)>0){
+        temp = dat[i,j]
+        dat[i,j]=backvals[IDPASS[1]]
+        backvals = c(temp,backvals[-daysback])
+        backvalsdates = c(datenums[i],backvalsdates[-daysback])
+        backvalsinds = c(dat[i,1],backvalsinds[-daysback])
+      }else{
+        backvals = c(dat[i,j],backvals[-daysback])
+        backvalsdates = c(datenums[i],backvalsdates[-daysback])
+        backvalsinds = c(dat[i,1],backvalsinds[-daysback])
+      }
+    }
+  }
+  saveRDS(list(dat),paste(fileloc,"/feature_matrix_clean_",daysback,"daycarry.rds",sep=""))
+ 
+}
+```
+this function contains two parts: fill in NAs and replicate survey responses. This function runs two loops based on dimension of the dataset to fill in all NAs, and retrieve the information of back values by running loop and scan the information of data as well. 
+
+
+#### text_locations
+```
+text_locations = function(textmat, mobmat){
+	textlocs = NULL
+	textlocs = textmat[,1] %>%
+		map(GPSlocation, mobility_matrix = mobmat) %>%
+		do.call(rbind, .) %>%
+		as.data.frame() %>%
+		cbind(textmat[,c("message.length","sent.vs.received")])
+	colnames(textlocs) = c("x","y", "code", "timestamp","length", "sent.vs.received")
+	textlocs[,c("hours","days")]  = hours(textlocs[,"timestamp"])
+	return(textlocs)
+}
+```
+this function inputs the textmat and mobmat, and then uses the first column of textmat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the textlocs, the matrix contains the information of the call, including the days, hours, type and length.
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Outputs
 
