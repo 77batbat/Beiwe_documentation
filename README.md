@@ -170,4 +170,37 @@ to call the accelerometer_preprocessing, we read files from our working director
 
 ### Outputs
 
+#### Individual Results
+The functions below generate plots for individual patient analysis. All plots of analyses for an individual patient are saved in a folder named as the patient’s id in `output/Results/Individual/`.
+
+-`ContinuousDataCollectionTracks()` - Plots daily data collection status for **Surveys**, **Screen on/off**, **GPS**, and **Accelerometer**. 
+
+
+#### Group Results
+
+The functions below generate plots for group analysis results and save pdf files in `output/Results/Group`.
+
+-`daily_adherence_grid()` -- Plots grid graphs demonstrating the daily adherence status of all patients. The columns of each grid graph are days, and the rows are survey responses, # of missed calls, call duration, total length of texts received, # of texts received, total length of texts sent, circadian routine, # of significant locations visited, max distance from home, distance travelling, time at home, and GPS amount recorded. A blank cell will be displayed on a given day if the data is 0 or was not collected for that category on that day. If the data is available, the greater the value is, the deeper color the cell will show. An example plot for one subject is shown below. 
+
+
+
+-` plot_data_quality()` -- Generate 9 individual scatter plots to show daily quality for accelerometer or GPS data for all subjects in the study. When plotting accelerometer data quality, run ` plot_data_quality(stream = "accelerometer", acc_frequency, acc_burst_duration, acc_break_duration,legend=FALSE)`. When plotting GPS data quality, run ` plot_data_quality(stream = "gps",  gps_frequency, gps_burst_duration, gps_break_duration,legend=FALSE)`. 
+
+
+
+Among the 9 plots, 4 are plotting **Number of Busts Per Day**, **Average Frequency Per Burst**, **Average Duration per Burst Over Time**, and **Average Duration Between Bursts Over Time** over **Unique Daily Measurements**. Points of each subject’s records are shown in a unique color. One example of Number of Busts Per Day over Unique Daily Measurements with 3 patients’ GPS data is shown below: 
+
+
+
+The x-axes of the other 5 plots are **Day**, and the y-axes are **Number of Bursts**, **Average Frequency Per Burst**, **Average Duration per Burst**, **Average Duration per Burst**, and **Overall Coverage**. One example of Number of Number of Busts Per Day over Day with 2 patients’ GPS data is shown below:
+
+
+
+-`plot_survey_responsiveness()` -- Generates 4 individual scatter plots to show daily survey responsiveness (measured by **Time to First Response** and **Time to Complete After First Response**) for subjects in the study. **Time to First Response** and **Time to Complete After First Response** are plotted over **Unique Daily Measurements** and over **Day**.
+
+-`plot_survey_completion()` -- Generates 2 scatter plots to show daily survey completion. WHY??????
+
+-`plot_accelerometer()` -- Generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ??????????????
+
+
 ### Utility
