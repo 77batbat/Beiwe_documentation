@@ -628,3 +628,19 @@ Generates individual plot of **Daily Accelerometer Data** for each patient. The 
 </p>
 
 ### Utility
+
+-`initialize.R`
+
+Imports all functions needed from the local Beiwe Analysis folder, reads all patients' data into R, and initializes output directories for preprocessed data, processed data, and result plots. 
+
+-`moving_average(x, n_neighbors = 1)`
+
+Takes a vector/list **x** and number of neighbors **n_neighbors** with default value as 1. The function returns the moving averages of **x**.
+
+
+
+
+
+
+
+
