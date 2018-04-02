@@ -191,6 +191,21 @@ this function we input the names of patients and the filepath of code to find bu
 
 
 
+#### gps_preprocessing
+```
+...
+mobmatmiss=GPS2MobMat(filelist,itrvl=ITRVL,accuracylim=ACCURACY_LIM,r=rad_fp,w=wid_fp)
+    mobmat = GuessPause(mobmatmiss,mindur=minpausedur,r=minpausedist)
+    if(!is.matrix(mobmat)){
+      cat("Insufficient GPS data.\n")
+      return(NULL)
+    }
+...
+```
+head function GPS_preprocessing is a main function unifies the functions that follow it. The file basically takes raw GPS data, converts it to "x and y" coordinates (some planar projection of the portion of the Earth), determines the times during which a subject is paused (and where they are), and periods where they are moving (a "flight"), and where they started and ended. To be specific, all the flights and pauses put together for a person is the final product of this module.
+
+
+
 
 
 ### Processing
@@ -371,18 +386,131 @@ text_locations = function(textmat, mobmat){
 		cbind(textmat[,c("message.length","sent.vs.received")])
 	colnames(textlocs) = c("x","y", "code", "timestamp","length", "sent.vs.received")
 ...
+
 }
 ```
 this function inputs the textmat and mobmat, and then uses the first column of textmat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the textlocs, the matrix contains the information of the call, including the days, hours, type and length.
 
 
+#### gps_imputation
+```
+...
+RandomBridge = function(x0,y0,x1,y1,t0,t1,fd,ft,fts,fa,fw,probp,pt,pts,pw,allts,allw,ind11,ind12,i_ind,pxs,pys,fxs,fys,allxs,allys,wtype,canpause,niter=100,spread_pars){
+  success=FALSE
+...
+
+```
+the function need to be filled in the gaps in time via imputation since people are in fact continuous in time. In this function, we calculate the random process where the two endpoints are known by random bridge.
 
 
 
+#### gps_survey_communication_dailyfeatures
+```
+...
+GetSurveyRow = function(aIDs,qIDs){
+  outvec = rep(NA,length(names(qIDs)))
+  for(i in 1:length(names(qIDs))){
+    if(length(which(names(aIDs)==names(qIDs)[i]))>0){
+      outvec[i]=aIDs[[names(qIDs)[i]]]
+    }
+...
+
+```
+With an imputed dataset of flights and pauses, we calculate a number of daily-level features by this function. In this function, we defines things like time spent at home, total distance from home, fancier things like significant location entropy, etc.
 
 
+#### FuzzyWindow
+```
+...
+Find.Group.Memberships = function(Data, S){
+  D = nrow(Data)
+  areas = apply(Data,1,area)
+  R = S[sapply(areas, minimum_relevant_window, vec = S)]
+
+...
+
+```
+Given a set of daily minimum and maximum x and y coordinates, find a set of windows that cover all data points and jointly minimize the number of windows used AND the area of each window. 
 
 
+#### ReplicateSurveyResponsesBackwards
+```
+...
+      IDPASS=intersect(intersect(IDNOTNA,IDSAMEIND),IDCLOSE)
+      if(is.na(dat[i,j]) && length(IDPASS)>0){
+        temp = dat[i,j]
+        dat[i,j]=backvals[IDPASS[1]]
+        backvals = c(temp,backvals[-daysback])
+        backvalsdates = c(datenums[i],backvalsdates[-daysback])
+        backvalsinds = c(dat[i,1],backvalsinds[-daysback])
+...
+
+```
+This function is used for filling surveys for days during which subjects did not take a survey. Lack of information in survey is common in digital phenotyping. To be specific, we simply fill in surveys that we next see so that we fill out the information which subjects did not take a survey.
+
+
+#### summarize_data_quality
+```
+...
+  bursts = bursts %>% group_by(patient, date) %>%
+    mutate(total_coverage = pmin(1,sum_pings/((burst_duration+break_duration)*burst_duration*frequency)),
+        num_bursts_coverage = num_bursts/(24*60*60/(burst_duration+break_duration)),
+        within_burst_length_coverage = avg_within_burst_duration/(burst_duration),
+        within_burst_frequency_coverage = avg_within_burst_frequency/frequency
+
+...
+
+```
+A function input the duration with 60 and frequent with 10 and integrate information group by each patient. Here, we add burst frequent, burst length coverage to patients, and then summarize the date which “burst == pat ” for each patient.
+
+
+#### survey_responsiveness
+```
+...
+  total = total[apply(total,1,function(x){sum(is.na(x))<5}),]
+  for(column in c("Notified","Present","Submitted"))
+    total[,column] = as.character(as.numeric(as.character(total[,column]))%/%1000)
+...
+
+```
+Create a frame with information of "Person","Survey_ID","Notified","Present", and "Submitted”. For the event variable, it has three levels of ”notified”, “present” and “submitted”, we run loops and add the information to corresponding ID if nothing is going wrong. To be specific, if it is “notified”, we store the information and flag that we would like to find when they next. However, if it is “present”, we mark down their presence, and stop looking. In the end, we also calculate the total of each category.
+
+
+#### text_features
+```
+...
+  response_time = function(x, y){# specifically, hours until responded to a text
+    where = which((diff(as.integer(x == "sent SMS"))) > 0)
+    output = mean(y[where+1]-y[where], na.rm=TRUE)
+    round(output / 60 / 60, 2)
+...
+
+```
+This function inputs textmat, a processed array of texts and outputs text_features, a processed array with text features. It calculates the numeric records of outgoing texs and ingoing texts groups by day. In the end, it integrates the text_responsiveness and response time where we define response time is the hours until responded to a text. All the numeric information listed in the end and save as text features.
+
+
+#### warp_GPS
+```
+...
+max(mobmat[,c("y0","y1")],na.rm=T))),num_warps,2)
+  pushes = rep(c(1,0),length.out=num_warps)
+  sds = 2*apply(mobmat[,c("x0","y0")], 2, sd, na.rm=TRUE)
+...
+
+```
+wrapper function is using warps on data and the inputs is mobmat, a dataframe with at least "x0", "x1", "y0", and "y1", by finding out the minimum, maximum, and length of the input, we fill out the matrix by coordinates and output warped GPS coordinates.
+
+
+#### warps
+```
+...
+warp_matrix = matrix(runif(num_warps*2,-2,2),num_warps,2)
+pushes = rep(c(1,0),length.out=num_warps)
+warped = warps(points, warp_matrix, pushes, sd1=2,sd2=2)
+...
+
+```
+Input of this function  are points with 2xN matrix of two-dimension. We starts with 2xK matrix of two-dimensional locations that warp `points`, called warp_matrix, and fill a vector of integers with 1 if and only if warp_matrix row value pushes points. In the end, the output are 2xN matrix of warped two-dimensional points.
 
 
 
