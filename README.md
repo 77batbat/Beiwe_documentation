@@ -537,7 +537,7 @@ The functions below generate plots for group analysis results and save pdf files
 Plots grid graphs demonstrating the daily adherence status of all patients. The columns of each grid graph are days, and the rows are survey responses, # of missed calls, call duration, total length of texts received, # of texts received, total length of texts sent, circadian routine, # of significant locations visited, max distance from home, distance travelling, time at home, and GPS amount recorded. A blank cell will be displayed on a given day if the data is 0 or was not collected for that category on that day. If the data is available, the greater the value is, the deeper color the cell will show. An example plot for one subject is shown below. 
 
 <p align="center"> 
-<img src="./example_plots/ExampleDataCollectionPlot.pngdherence.png">
+<img src="./example_plots/ExampleDataCollectionPlot.png">
 </p>
 
 -` plot_data_quality()` 
