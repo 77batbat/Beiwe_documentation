@@ -570,7 +570,7 @@ Generates 2 scatter plots to visualize weekly survey completion.
 
 -`plot_accelerometer()` 
 
-Generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ??????????????
+Generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ?? WAITING FOR RESPONSE FROM PATRICK
 
 <p align="center"> 
 <img src="./example_plots/slat_plot.png" width="500">
