@@ -7,7 +7,7 @@ This documentation will demonstrate a guideline of how to run the Beiwe-Analysis
 - [Introduction to the functions involved in Beiwe-Analysis](#introduction-to-the-functions-involved-in-beiwe-analysis)
     - [Preprocessing](#preprocessing)
     - [Processing](#processing)
-    - [Outputs](#outputs)
+    - [Results](#results)
     - [Utility](#utility) 
 
 ## Environment Setup
@@ -76,8 +76,7 @@ The following steps instruct how to install necessary packages including **Rcpp*
 	   data_filepath      = "/Users/OnnelaLab/Sample-Data"
 	   output_filepath    = "/Users/OnnelaLab/output"
 	   root_filepath      = "/Users/OnnelaLab/"
-	   ```
-
+	   ```
 ## Introduction to the functions involved in Beiwe-Analysis
 ### Preprocessing
 
@@ -515,14 +514,14 @@ Input of this function  are points with 2xN matrix of two-dimension. We starts w
 
 
 
-### Outputs
+### Results
 
 #### Individual Results
 The functions below generate plots for individual patient analysis. All plots of analyses for an individual patient are saved in a folder named as the patient’s id in `output/Results/Individual/`.
 
 -`ContinuousDataCollectionTracks()` 
 
-Plots daily data collection status for **Surveys**, **Screen on/off**, **GPS**, and **Accelerometer**. 
+Plots daily data collection status for **Surveys**, **Screen on/off**, **GPS**, and **Accelerometer**. This function requires the RDS file MobFeatures.rds created by the `CreateMobilityFeatures()` function.
 
 <p align="center"> 
 <img src="./example_plots/DataCollectionTracks.png" width="500">
@@ -542,7 +541,7 @@ Plots grid graphs demonstrating the daily adherence status of all patients. The 
 
 -` plot_data_quality()` 
 
-Generate 9 individual scatter plots to show daily quality for accelerometer or GPS data for all subjects in the study. When plotting accelerometer data quality, run ` plot_data_quality(stream = "accelerometer", acc_frequency, acc_burst_duration, acc_break_duration,legend=FALSE)`. When plotting GPS data quality, run ` plot_data_quality(stream = "gps",  gps_frequency, gps_burst_duration, gps_break_duration,legend=FALSE)`. 
+Reads processed RDS data files accelerometer_bursts.rds, gps_bursts.rds, accelerometer_coverage.rds, and gps_coverage.rds (all created by `find_burst()`), and generates 9 individual scatter plots to show daily quality for accelerometer or GPS data for all subjects in the study. When plotting accelerometer data quality, run ` plot_data_quality(stream = "accelerometer", acc_frequency, acc_burst_duration, acc_break_duration,legend=FALSE)`. When plotting GPS data quality, run ` plot_data_quality(stream = "gps",  gps_frequency, gps_burst_duration, gps_break_duration,legend=FALSE)`. 
 
 
 Among the 9 plots, 4 are plotting **Number of Busts Per Day**, **Average Frequency Per Burst**, **Average Duration per Burst Over Time**, and **Average Duration Between Bursts Over Time** over **Unique Daily Measurements**. Points of each subject’s records are shown in a unique color. One example of Number of Busts Per Day over Unique Daily Measurements with 3 patients’ GPS data is shown below: 
@@ -561,20 +560,21 @@ The x-axes of the other 5 plots are **Day**, and the y-axes are **Number of Burs
 
 -`plot_survey_responsiveness()` 
 
-Generates 4 individual scatter plots to show daily survey responsiveness (measured by **Time to First Response** and **Time to Complete After First Response**) for subjects in the study. **Time to First Response** and **Time to Complete After First Response** are plotted over **Unique Daily Measurements** and over **Day**.
+Generates 4 individual scatter plots to show daily survey responsiveness (measured by **Time to First Response** and **Time to Complete After First Response**) for subjects in the study. **Time to First Response** and **Time to Complete After First Response** are plotted over **Unique Daily Measurements** and over **Day**. This function needs the RDS file survey_responsiveness.rds created by the ``survey_responsiveness()`` function.
 
 
 -`plot_survey_completion()` 
 
-Generates 2 scatter plots to visualize weekly survey completion. 
+Generates 2 scatter plots to visualize weekly survey completion. For both plots, the y-axis is **Number of Survyes Taken**. The x-axis for the first plot is unique weekly measurements, and the x-axis for the second plot is **week** with range as the entire study period. 
 
 -`plot_accelerometer()` 
 
-Generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ?? WAITING FOR RESPONSE FROM PATRICK
+Takes minutes = acc_binsize (width of bin in minutes used for combining accelerometer data) as inputs, and generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ?? WAITING FOR RESPONSE FROM PATRICK
 
 <p align="center"> 
 <img src="./example_plots/slat_plot.png" width="500">
 </p>
+
 
 ### Utility
 
