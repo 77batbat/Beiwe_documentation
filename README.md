@@ -95,7 +95,7 @@ function(patient_name, ...){
 ```
 
 survey preprocessing:
-in this preprocessing, we call each patient name by loop and read survey data  from “specific survey filepath”. If there exists information in the survey file, we read the information by such order that: survey name, date, patient name, timestamp, etc. We store this information into several lists and that save then as RDS file.
+in this preprocessing, we call each patient name by loop and read survey data from “specific survey filepath”. If there exists information in the survey file, we read the information by such order that: survey name, date, patient name, timestamp, etc. We store this information into several lists and that save then as RDS file.
 
 
 #### text_preprocessing
@@ -111,7 +111,7 @@ function(patient_name, ...){
 }
 ```
 
-calling the text preprocessing function, we create textmat by adding information from texts file. To be specific, we first convert textmat by dividing it by 1000. Then we created the variable the variables "hours","days" by splitting the variable  "timestamp”. The reason to do this is since timestamp combine the information of hours and days and we want to extract them from this variable. 
+calling the text preprocessing function, we create textmat by adding information from texts file. To be specific, we first convert textmat by dividing it by 1000. Then we creat the variables "hours","days" by splitting the variable  "timestamp”. The reason to do this is since timestamp combines the information of hours and days and we want to extract them from this variable. 
 
 
 #### calls_preprocessing
@@ -127,7 +127,7 @@ function(patient_name, ...){
   saveRDS(callmat, paste(output_filepath, "/Preprocessed_Data/Individual/",patient_name, "/call_data.rds",sep=""))
 }
 ```
-to call the calls preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also want to combine information from each file and split the variable "timestamp” into “hours” and “days” and convert them information and store them in the format of call.
+To call the calls preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also combine information from each file and split the variable "timestamp” into “hours” and “days” and combine their information together and store them in the format of call.
 
 
 #### powerstate_preprocessing
@@ -144,7 +144,7 @@ function(patient_name, ...){
 }
 ```
 
-to call the powerstate preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also want to combine information from each file and split the variable "timestamp” into “hours” and “days” and convert them information and store them in the format of statemat and store them in RDS file.
+to call the powerstate preprocessing, we read files from our working directory and basically do the same thing as the text preprocessing. We also combine information from each file and split the variable "timestamp” into “hours” and “days” and combine their information together and store them in the format of statemat and store them in RDS file.
 
 
 #### accelerometer_preprocessing
@@ -161,7 +161,7 @@ function(patient_name, minutes, verbose = TRUE, ...){
 }
 ```
 
-to call the accelerometer_preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also want to combine information from each file and split the variable "timestamp” into “hours” and “days” and convert them information and store them in the format of accmat and store them in RDS file.
+to call the accelerometer_preprocessing, we read files from our working directory and basically do the same thing as the text preprocessing. We also combine information from each file and split the variable "timestamp” into “hours” and “days” and combine their information together and store them in the format of accmat and store them in RDS file.
 
 }}
 
@@ -186,7 +186,7 @@ find_bursts = function(patient_name,
 
 ```
 
-this function we input the names of patients and the filepath of code to find bursts. If the file already exists, then we report the information as “bursts file already exists”, otherwise we retrieve the information by calling “system” function and combine the filepath from code, data, patient_data_filename_TXT, patient_name, etc. and save it as RDS.
+For this function, we input the names of patients and the filepath of code to find bursts. If the file already exists, then we report the information as “bursts file already exists”, otherwise we retrieve the information by calling “system” function and combine the filepath from code, data, patient_data_filename_TXT, patient_name, etc. and save it as RDS.
 
 
 
@@ -201,7 +201,7 @@ mobmatmiss=GPS2MobMat(filelist,itrvl=ITRVL,accuracylim=ACCURACY_LIM,r=rad_fp,w=w
     }
 ...
 ```
-head function GPS_preprocessing is a main function unifies the functions that follow it. The file basically takes raw GPS data, converts it to "x and y" coordinates (some planar projection of the portion of the Earth), determines the times during which a subject is paused (and where they are), and periods where they are moving (a "flight"), and where they started and ended. To be specific, all the flights and pauses put together for a person is the final product of this module.
+Function GPS_preprocessing is a main function unifies the functions that follow it. The file basically takes raw GPS data, converts it to "x and y" coordinates (some planar projection of the portion of the Earth), determines the times during which a subject is paused (and where they are), and periods where they are moving (a "flight"), and where they started and ended. To be specific, all the flights and pauses put together for a person is the final output of this module.
 
 
 
@@ -222,8 +222,8 @@ head function GPS_preprocessing is a main function unifies the functions that fo
 }
 ```
 
-Call_features is a long function, which is used to retrieve information of features in data.
-Basically, this function input the information of callmat, a processed array of calls, and output (call_features), a processed array of calls features
+Call_features is a long function, which is used to retrieve features from data.
+Basically, this function inputs the information of callmat, a processed array of calls, and outputs a processed array of calls features
 To be specific, We have the variable of “day”, which is used for grouping the information by days. Then we collect information of outgoing/incoming calls, the length of outgoing/incoming calls, the degree of outgoing/incoming calls, changes, responsive time, etc., and obtain the information by days in numeric unit. In the end, we combine these information and join them into one data frame.
 
 
@@ -241,7 +241,7 @@ call_locations = function(callmat, mobmat){
 	return(calllocs)
 }
 ```
-this function inputs the callmat and mobmat, and then uses the first column of callmat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the calllocs, the matrix contains the information of the call, including the days, hours, type and length.
+this function inputs the callmat and mobmat, and then uses the first column of callmat matrix to map into GPS location. After obtain the timestamp, we combine this information with the duration in second and types of the call. In the end, this function outputs the calllocs, the matrix containing the information of the call, including the days, hours, type and length.
 
 
 #### CombineSurveyResponses
@@ -333,7 +333,7 @@ this function is used for converting timestamps into hour of the day. We first r
   }
 ...
 ```
-First of all, this function groups the data by patient and aggregate information of coverage. Then creates zeroed column and zeroed week. Secondly, we define the variable of weekly_accelerometer, weekly_gps by calling “weekly_coverage” function. After removing the “NA”, and including time variables such as “time_to_present” and “time_to_submitted”, we have the new data of weekly_timeing. In the end, we convert the date into “hours”, and finalizing our data by combing these information together (weekly_accelerometer, weekly_gps, weekly_timings, etc.)
+This function first groups the data by patient and aggregate information of coverage. Then creates zeroed column and zeroed week. We then define the variable of weekly_accelerometer, weekly_gps by calling “weekly_coverage” function. After removing the “NA”, and including time variables such as “time_to_present” and “time_to_submitted”, we have the new data of weekly_timeing. In the end, we convert the date into “hours”, and finalizing our data by combing these information together (weekly_accelerometer, weekly_gps, weekly_timings, etc.)
 
 
 #### powerstate_locations
@@ -429,7 +429,7 @@ Find.Group.Memberships = function(Data, S){
 ...
 
 ```
-Given a set of daily minimum and maximum x and y coordinates, find a set of windows that cover all data points and jointly minimize the number of windows used AND the area of each window. 
+Given a set of daily minimum and maximum x and y coordinates, this function finds a set of windows that cover all data points and jointly minimize the number of windows used AND the area of each window. 
 
 
 #### ReplicateSurveyResponsesBackwards
@@ -445,7 +445,7 @@ Given a set of daily minimum and maximum x and y coordinates, find a set of wind
 ...
 
 ```
-This function is used for filling surveys for days during which subjects did not take a survey. Lack of information in survey is common in digital phenotyping. To be specific, we simply fill in surveys that we next see so that we fill out the information which subjects did not take a survey.
+This function is used for filling surveys for days during which subjects did not take a survey. Lack of information in survey is common in digital phenotyping. To be specific, if someone did not take the survey, we simply replace this information by "0".
 
 
 #### summarize_data_quality
@@ -509,7 +509,7 @@ warped = warps(points, warp_matrix, pushes, sd1=2,sd2=2)
 ...
 
 ```
-Input of this function  are points with 2xN matrix of two-dimension. We starts with 2xK matrix of two-dimensional locations that warp `points`, called warp_matrix, and fill a vector of integers with 1 if and only if warp_matrix row value pushes points. In the end, the output are 2xN matrix of warped two-dimensional points.
+Inputs of this function are points with 2xN matrix of two-dimension. We starts with 2xK matrix of two-dimensional locations that warp `points`, called warp_matrix, and fill a vector of integers with 1 if and only if warp_matrix row value pushes points. In the end, the output is a 2xN matrix of warped two-dimensional points.
 
 
 
@@ -552,7 +552,7 @@ Among the 9 plots, 4 are plotting **Number of Busts Per Day**, **Average Frequen
 
 
 
-The x-axes of the other 5 plots are **Day**, and the y-axes are **Number of Bursts**, **Average Frequency Per Burst**, **Average Duration per Burst**, **Average Duration per Burst**, and **Overall Coverage**. One example of Number of Number of Busts Per Day over Day with 2 patients’ GPS data is shown below:
+For the other 5 plots, the x-axes are **Day**, and the y-axes are **Number of Bursts**, **Average Frequency Per Burst**, **Average Duration per Burst**, **Average Duration per Burst**, and **Overall Coverage**. One example of Number of Number of Busts Per Day over Day with 2 patients’ GPS data is shown below:
 
 <p align="center"> 
 <img src="./example_plots/quality_day.png" width="500">
