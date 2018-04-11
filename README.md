@@ -569,7 +569,7 @@ Generates 2 scatter plots to visualize weekly survey completion. For both plots,
 
 -`plot_accelerometer()` 
 
-Takes minutes = acc_binsize (width of bin in minutes used for combining accelerometer data) as inputs, and generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period.  COLOR ?? WAITING FOR RESPONSE FROM PATRICK
+Takes minutes = acc_binsize (width of bin in minutes used for combining accelerometer data) as inputs, and generates individual plot of **Daily Accelerometer Data** for each patient. The x-axis for each plot is **Time of day** (in 24 hours format), and the y-axis is **Day** over the entire study period. 
 
 <p align="center"> 
 <img src="./example_plots/slat_plot.png" width="500">
