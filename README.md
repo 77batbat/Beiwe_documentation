@@ -128,7 +128,7 @@ function(patient_name, ...){
 }
 ```
 To call the calls preprocessing, we read files from our working directory and basically did the same thing as the text preprocessing. We also combine information from each file and split the variable "timestamp” into “hours” and “days” and combine their information together and store them in the format of call.
-
+ 
 
 #### powerstate_preprocessing
 ```
