@@ -1,6 +1,6 @@
 # Running the Beiwe-Analysis code locally
 
-This documentation will demonstrate a guideline of how to run the Beiwe-Analysis code locally and will also provide introduction for each function.
+This documentation will demonstrate how to run Beiwe data analysis code locally and will also provide a brief introduction for each function.
 
 ## Table of Contents
 - [Environment Setup](#environment-setup) 
